@@ -1,5 +1,8 @@
 # IC Types
 
+## Contributing
+Please follow the guidelines in the [CONTRIBUTING.md](.github/CONTRIBUTING.md) document.
+
 ## Goal
 This library contains typings and utility functions dealing with the Public specification of the Internet Computer
  and the HTTP
