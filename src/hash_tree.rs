@@ -108,9 +108,9 @@ impl<'a> HashTree<'a> {
     /// sequence of labels (blobs).
     pub fn lookup_path<P>(&self, path: P) -> LookupResult<'_>
     where
-        P: AsRef<[Label]>,
+        P: IntoIterator<Item = Label>,
     {
-        self.root.lookup_path(path.as_ref())
+        self.root.lookup_path(&mut path.into_iter())
     }
 }
 
@@ -383,27 +383,22 @@ impl<'a> HashTreeNode<'a> {
     ///
     /// This assumes a sorted hash tree, which is what the spec says the system should return.
     /// It will stop when it finds a label that's greater than the one being looked for.
-    fn lookup_path(&self, path: &[Label]) -> LookupResult<'_> {
+    fn lookup_path(&self, path: &mut dyn Iterator<Item = Label>) -> LookupResult<'_> {
         use HashTreeNode::*;
+        use LookupLabelResult as LLR;
         use LookupResult::*;
 
-        if path.is_empty() {
-            match self {
-                Empty() => Absent,
-                Leaf(v) => Found(v.as_ref()),
-                Pruned(_) => Unknown,
-                Labeled(_, _) => Error,
-                Fork(_) => Error,
-            }
-        } else {
-            match self.lookup_label(&path[0]) {
-                LookupLabelResult::Unknown => Unknown,
-                LookupLabelResult::Absent | LookupLabelResult::Continue => match self {
-                    Empty() | Pruned(_) | Leaf(_) => Unknown,
-                    _ => Absent,
-                },
-                LookupLabelResult::Found(node) => node.lookup_path(&path[1..]),
-            }
+        match (path.next().map(|segment| self.lookup_label(&segment)), self) {
+            (Some(LLR::Found(node)), _) => node.lookup_path(path),
+            (None, Leaf(v)) => Found(v.as_ref()),
+
+            (None, Empty()) => Absent,
+            (None, Pruned(_)) => Unknown,
+            (None, Labeled(_, _) | Fork(_)) => Error,
+
+            (Some(LLR::Unknown), _) => Unknown,
+            (Some(LLR::Absent | LLR::Continue), Empty() | Pruned(_) | Leaf(_)) => Unknown,
+            (Some(LLR::Absent | LLR::Continue), _) => Absent,
         }
     }
 }
