@@ -106,9 +106,9 @@ impl<'a> HashTree<'a> {
 
     /// Given a (verified) tree, the client can fetch the value at a given path, which is a
     /// sequence of labels (blobs).
-    pub fn lookup_path<'p, P: 'p>(&self, path: P) -> LookupResult<'_>
+    pub fn lookup_path<'p, P>(&self, path: P) -> LookupResult<'_>
     where
-        P: IntoIterator<Item = &'p Label>,
+        P: 'p + IntoIterator<Item = &'p Label>,
     {
         self.root.lookup_path(&mut path.into_iter())
     }
