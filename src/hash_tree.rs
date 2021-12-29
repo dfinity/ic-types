@@ -106,9 +106,9 @@ impl<'a> HashTree<'a> {
 
     /// Given a (verified) tree, the client can fetch the value at a given path, which is a
     /// sequence of labels (blobs).
-    pub fn lookup_path<P>(&self, path: P) -> LookupResult<'_>
+    pub fn lookup_path<'p, P: 'p>(&self, path: P) -> LookupResult<'_>
     where
-        P: IntoIterator<Item = Label>,
+        P: IntoIterator<Item = &'p Label>,
     {
         self.root.lookup_path(&mut path.into_iter())
     }
@@ -383,12 +383,12 @@ impl<'a> HashTreeNode<'a> {
     ///
     /// This assumes a sorted hash tree, which is what the spec says the system should return.
     /// It will stop when it finds a label that's greater than the one being looked for.
-    fn lookup_path(&self, path: &mut dyn Iterator<Item = Label>) -> LookupResult<'_> {
+    fn lookup_path(&self, path: &mut dyn Iterator<Item = &Label>) -> LookupResult<'_> {
         use HashTreeNode::*;
         use LookupLabelResult as LLR;
         use LookupResult::*;
 
-        match (path.next().map(|segment| self.lookup_label(&segment)), self) {
+        match (path.next().map(|segment| self.lookup_label(segment)), self) {
             (Some(LLR::Found(node)), _) => node.lookup_path(path),
             (None, Leaf(v)) => Found(v.as_ref()),
 
