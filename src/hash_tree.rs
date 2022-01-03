@@ -108,7 +108,7 @@ impl<'a> HashTree<'a> {
     /// sequence of labels (blobs).
     pub fn lookup_path<'p, P>(&self, path: P) -> LookupResult<'_>
     where
-        P: 'p + IntoIterator<Item = &'p Label>,
+        P: IntoIterator<Item = &'p Label>,
     {
         self.root.lookup_path(&mut path.into_iter())
     }
