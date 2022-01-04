@@ -19,9 +19,9 @@ impl Label {
 }
 
 #[cfg(feature = "serde")]
-impl Into<serde_bytes::ByteBuf> for Label {
-    fn into(self) -> serde_bytes::ByteBuf {
-        serde_bytes::ByteBuf::from(self.as_bytes().to_vec())
+impl From<Label> for serde_bytes::ByteBuf {
+    fn from(label: Label) -> serde_bytes::ByteBuf {
+        serde_bytes::ByteBuf::from(label.as_bytes().to_vec())
     }
 }
 
@@ -120,9 +120,9 @@ impl<'a> AsRef<HashTreeNode<'a>> for HashTree<'a> {
     }
 }
 
-impl<'a> Into<HashTreeNode<'a>> for HashTree<'a> {
-    fn into(self) -> HashTreeNode<'a> {
-        self.root
+impl<'a> From<HashTree<'a>> for HashTreeNode<'a> {
+    fn from(tree: HashTree<'a>) -> HashTreeNode<'a> {
+        tree.root
     }
 }
 
