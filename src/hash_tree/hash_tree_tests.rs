@@ -6,7 +6,7 @@ use crate::hash_tree::{
 fn lookup_path<'a, P: AsRef<[&'static str]>>(tree: &'a HashTree<'a>, path: P) -> LookupResult<'a> {
     let path: Vec<Label> = path.as_ref().iter().map(|l| l.into()).collect();
 
-    tree.lookup_path(path)
+    tree.lookup_path(&path)
 }
 
 #[test]
@@ -115,7 +115,7 @@ fn can_lookup_paths() {
     );
 
     assert_eq!(
-        tree.lookup_path(["label 2".into()]),
+        tree.lookup_path(&["label 2".into()]),
         LookupResult::Found(&[1, 2, 3, 4, 5, 6])
     )
 }
