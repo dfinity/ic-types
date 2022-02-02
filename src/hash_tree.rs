@@ -41,12 +41,12 @@ impl std::fmt::Display for Label {
         // Try to print it as an UTF-8 string. If an error happens, print the bytes
         // as hexadecimal.
         match std::str::from_utf8(self.as_bytes()) {
-            Ok(s) => {
+            Ok(s) if s.chars().all(|c| c.is_ascii_graphic()) => {
                 f.write_char('"')?;
                 f.write_str(s)?;
                 f.write_char('"')
             }
-            Err(_) => {
+            _ => {
                 write!(f, "0x")?;
                 std::fmt::Debug::fmt(self, f)
             }
@@ -250,17 +250,22 @@ impl std::fmt::Debug for HashTreeNode<'_> {
     // ```
     fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
         fn readable_print(f: &mut std::fmt::Formatter<'_>, v: &[u8]) -> std::fmt::Result {
-            // If it's utf8 then show as a string. If it's short, show hex. Otherwise,
-            // show length.
-            if let Ok(s) = std::str::from_utf8(v) {
-                f.write_str("\"")?;
-                f.write_str(s)?;
-                f.write_str("\"")
-            } else if v.len() <= 32 {
-                f.write_str("0x")?;
-                f.write_str(&hex::encode(v))
-            } else {
-                write!(f, "{} bytes", v.len())
+            // If it's UTF-8 and all the characters are graphic ASCII, then show as a string.
+            // If it's short, show hex.
+            // Otherwise, show length.
+            match std::str::from_utf8(v) {
+                Ok(s) if s.chars().all(|c| c.is_ascii_graphic()) => {
+                    f.write_str("\"")?;
+                    f.write_str(s)?;
+                    f.write_str("\"")
+                }
+                _ if v.len() <= 32 => {
+                    f.write_str("0x")?;
+                    f.write_str(&hex::encode(v))
+                }
+                _ => {
+                    write!(f, "{} bytes", v.len())
+                }
             }
         }
 
