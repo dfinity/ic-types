@@ -182,7 +182,6 @@ impl Principal {
         match bytes {
             [] => Ok(Principal::management_canister()),
             [ANONYMOUS] => Ok(Principal::anonymous()),
-            [.., ANONYMOUS] => Err(PrincipalError::BufferTooLong()),
             bytes @ [..] => match PrincipalInner::try_from_slice(bytes) {
                 None => Err(PrincipalError::BufferTooLong()),
                 Some(v) => Ok(Principal(v)),
@@ -510,6 +509,14 @@ mod tests {
             .unwrap(),
             principal
         );
+    }
+
+    #[test]
+    fn long_blobs_ending_04_is_valid_principal() {
+        let blob: [u8; 18] = [
+            10, 116, 105, 100, 0, 0, 0, 0, 0, 144, 0, 51, 1, 1, 0, 0, 0, 4,
+        ];
+        assert!(Principal::try_from_slice(&blob).is_ok());
     }
 
     #[test]
