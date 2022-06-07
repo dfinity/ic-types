@@ -162,12 +162,6 @@ impl Principal {
     /// # use ic_types::Principal;
     /// const BAR: Principal = Principal::from_slice(&[0; 32]); // Fails, too long
     /// ```
-    ///
-    /// ```compile_fail
-    /// # use ic_types::Principal;
-    /// // Fails, ends in 0x04 (anonymous), but has a prefix
-    /// const BAZ: Principal = Principal::from_slice(&[1,2,3,4]);
-    /// ```
     pub const fn from_slice(bytes: &[u8]) -> Self {
         if let Ok(v) = Self::try_from_slice(bytes) {
             v
