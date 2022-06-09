@@ -201,3 +201,123 @@ mod convert_from_text {
         }
     }
 }
+
+mod convert_to_bytes {
+    use super::*;
+
+    #[test]
+    fn managements_canister_converts_to_empty_slice() {
+        assert_eq!(Principal::management_canister().as_slice(), &[]);
+    }
+
+    #[test]
+    fn anonymouse_converts_to_single_byte_04() {
+        assert_eq!(Principal::anonymous().as_slice(), &[04]);
+    }
+
+    #[test]
+    fn managements_canister_as_ref_empty_slice() {
+        assert_eq!(Principal::management_canister().as_ref(), &[]);
+    }
+
+    #[test]
+    fn anonymouse_converts_as_ref_single_byte_04() {
+        assert_eq!(Principal::anonymous().as_ref(), &[04]);
+    }
+}
+
+mod convert_to_text {
+    use super::*;
+
+    #[test]
+    fn managements_canister_to_text_correct() {
+        assert_eq!(
+            Principal::management_canister().to_text(),
+            "aaaaa-aa".to_string()
+        );
+    }
+
+    #[test]
+    fn anonymous_to_text_correct() {
+        assert_eq!(Principal::anonymous().to_text(), "2vxsx-fae".to_string());
+    }
+
+    #[test]
+    fn managements_canister_display_correct() {
+        // impl Display
+        assert_eq!(
+            format!("{}", Principal::management_canister()),
+            "aaaaa-aa".to_string()
+        );
+    }
+
+    #[test]
+    fn anonymous_display_correct() {
+        assert_eq!(
+            format!("{}", Principal::anonymous()),
+            "2vxsx-fae".to_string()
+        );
+    }
+
+    #[test]
+    fn managements_canister_to_string_correct() {
+        // ToString trait was automatically implemented because impl Display trait
+        assert_eq!(
+            Principal::management_canister().to_string(),
+            "aaaaa-aa".to_string()
+        );
+    }
+
+    #[test]
+    fn anonymous_to_string_correct() {
+        assert_eq!(Principal::anonymous().to_string(), "2vxsx-fae".to_string());
+    }
+}
+
+mod derive_traits {
+    use super::*;
+
+    #[test]
+    fn impl_copy_and_partial_eq() {
+        // Eq cannot be checked at
+        let x = Principal::management_canister();
+        let y = x;
+        assert!(x.eq(&y));
+    }
+
+    #[test]
+    fn impl_ord() {
+        // Ording
+        let x = Principal::management_canister();
+        let y = Principal::anonymous();
+        assert_eq!(x.cmp(&y), std::cmp::Ordering::Less);
+    }
+
+    #[test]
+    fn impl_hash() {
+        use std::hash::Hash;
+        let x = Principal::management_canister();
+        let y = x;
+        let mut hasher = std::collections::hash_map::DefaultHasher::new();
+        assert_eq!(x.hash(&mut hasher), y.hash(&mut hasher));
+    }
+}
+
+#[test]
+fn impl_traits() {
+    use serde::{Deserialize, Serialize};
+    use std::convert::TryFrom;
+    use std::fmt::{Debug, Display};
+    use std::hash::Hash;
+    use std::str::FromStr;
+
+    assert!(impls::impls!(
+        Principal: Debug & Display & Clone & Copy & Eq & PartialOrd & Ord & Hash
+    ));
+
+    assert!(
+        impls::impls!(Principal: FromStr & TryFrom<&'static str> & TryFrom<Vec<u8>> & TryFrom<&'static Vec<u8>> & TryFrom<&'static [u8]> & AsRef<[u8]>)
+    );
+
+    assert!(impls::impls!(Principal: Serialize & Deserialize<'static>));
+}
