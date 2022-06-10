@@ -1,14 +1,25 @@
-use std::convert::TryFrom;
-
 use ic_types::Principal;
 use ic_types::PrincipalError;
+
+const MANAGEMENT_CANISTER_BYTES: [u8; 0] = [];
+const MANAGEMENT_CANISTER_TEXT: &str = "aaaaa-aa";
+
+const ANONYMOUS_CANISTER_BYTES: [u8; 1] = [4u8];
+const ANONYMOUS_CANISTER_TEXT: &str = "2vxsx-fae";
+
+const TEST_CASE_BYTES: [u8; 9] = [0xef, 0xcd, 0xab, 0, 0, 0, 0, 0, 1];
+const TEST_CASE_TEXT: &str = "2chl6-4hpzw-vqaaa-aaaaa-c";
 
 mod convert_from_bytes {
     use super::*;
 
     #[test]
+    fn try_from_test_case_ok() {
+        assert!(Principal::try_from_slice(&TEST_CASE_BYTES).is_ok());
+    }
+
+    #[test]
     fn try_from_slice_length_0_29_ok() {
-        // Principal::try_from_slice(bytes: &[u8])
         let array = [0u8; 29];
         for len in 0..30 {
             assert!(Principal::try_from_slice(&array[..len]).is_ok());
@@ -17,7 +28,6 @@ mod convert_from_bytes {
 
     #[test]
     fn try_from_slice_length_30_err() {
-        // Principal::try_from_slice(bytes: &[u8])
         assert_eq!(
             Principal::try_from_slice(&[0u8; 30]),
             Err(PrincipalError::BufferTooLong())
@@ -25,180 +35,69 @@ mod convert_from_bytes {
     }
 
     #[test]
-    fn try_from_vec_u8_length_0_29_ok() {
-        // impl TryFrom<Vec<u8>> for Principal
-        for len in 0..30 {
-            assert!(Principal::try_from(vec![0u8; len]).is_ok());
-        }
+    fn from_test_case_ok() {
+        Principal::from_slice(&TEST_CASE_BYTES);
     }
 
     #[test]
-    fn try_from_vec_u8_length_30_err() {
-        // impl TryFrom<Vec<u8>> for Principal
-        assert_eq!(
-            Principal::try_from(vec![0u8; 30]),
-            Err(PrincipalError::BufferTooLong())
-        );
-    }
-
-    #[test]
-    fn try_from_ref_vec_u8_length_0_29_ok() {
-        // impl TryFrom<&Vec<u8>> for Principal
-        for len in 0..30 {
-            assert!(Principal::try_from(&vec![0u8; len]).is_ok());
-        }
-    }
-
-    #[test]
-    fn try_from_ref_vec_u8_length_30_err() {
-        // impl TryFrom<&Vec<u8>> for Principal
-        assert_eq!(
-            Principal::try_from(&vec![0u8; 30]),
-            Err(PrincipalError::BufferTooLong())
-        );
-    }
-
-    #[test]
-    fn try_from_u8_slice_length_0_29_ok() {
-        // impl TryFrom<[u8]> for Principal
+    fn from_slice_length_0_29_ok() {
         let array = [0u8; 29];
         for len in 0..30 {
-            assert!(Principal::try_from(&array[..len]).is_ok());
+            Principal::from_slice(&array[..len]);
         }
     }
 
     #[test]
-    fn try_from_u8_slice_length_30_err() {
-        // impl TryFrom<[u8]> for Principal
-        let array = [0u8; 30];
-        assert_eq!(
-            Principal::try_from(&array[..]),
-            Err(PrincipalError::BufferTooLong())
-        );
+    #[should_panic]
+    fn from_slice_length_30_err() {
+        Principal::from_slice(&[0u8; 30]);
     }
 }
 
 mod convert_from_text {
     use super::*;
 
-    mod from_text {
-        use super::*;
-
-        #[test]
-        fn convert_from_8_chars_ok() {
-            // input must be 8~63 chars including `-`s
-            // using empty blob as shortest test case
-            assert!(Principal::from_text("aaaaa-aa").is_ok());
-        }
-
-        #[test]
-        fn convert_from_7_chars_err() {
-            assert_eq!(
-                Principal::from_text("aaaaa-a"),
-                Err(PrincipalError::TextTooSmall())
-            );
-        }
-
-        #[test]
-        fn convert_from_63_chars_ok() {
-            // input must be 8~63 chars including `-`s
-            // using [0u8; 29] as longest test case
-            assert!(Principal::from_text(
-                "bnkmk-jqaaa-aaaaa-aaaaa-aaaaa-aaaaa-aaaaa-aaaaa-aaaaa-aaaaa-aaa"
-            )
-            .is_ok());
-        }
-
-        #[test]
-        fn convert_from_64_chars_err() {
-            // TODO: The exact error type will be changed
-            assert!(matches!(
-                Principal::from_text(
-                    "bnkmk-jqaaa-aaaaa-aaaaa-aaaaa-aaaaa-aaaaa-aaaaa-aaaaa-aaaaa-aaaa"
-                ),
-                Err(PrincipalError::AbnormalTextualFormat(..))
-            ));
-        }
+    #[test]
+    fn convert_from_test_case_ok() {
+        // input must be 8~63 chars including `-`s
+        // using empty blob as shortest test case
+        assert!(Principal::from_text(TEST_CASE_TEXT).is_ok());
     }
 
-    mod try_from_ref_str {
-        use super::*;
-
-        #[test]
-        fn convert_from_8_chars_ok() {
-            // input must be 8~63 chars including `-`s
-            // using empty blob as shortest test case
-            assert!(Principal::try_from("aaaaa-aa").is_ok());
-        }
-
-        #[test]
-        fn convert_from_7_chars_err() {
-            assert_eq!(
-                Principal::try_from("aaaaa-a"),
-                Err(PrincipalError::TextTooSmall())
-            );
-        }
-
-        #[test]
-        fn convert_from_63_chars_ok() {
-            // input must be 8~63 chars including `-`s
-            // using [0u8; 29] as longest test case
-            assert!(Principal::try_from(
-                "bnkmk-jqaaa-aaaaa-aaaaa-aaaaa-aaaaa-aaaaa-aaaaa-aaaaa-aaaaa-aaa"
-            )
-            .is_ok());
-        }
-
-        #[test]
-        fn convert_from_64_chars_err() {
-            // TODO: The exact error type will be changed
-            assert!(matches!(
-                Principal::try_from(
-                    "bnkmk-jqaaa-aaaaa-aaaaa-aaaaa-aaaaa-aaaaa-aaaaa-aaaaa-aaaaa-aaaa"
-                ),
-                Err(PrincipalError::AbnormalTextualFormat(..))
-            ));
-        }
+    #[test]
+    fn convert_from_8_chars_ok() {
+        // input must be 8~63 chars including `-`s
+        // using empty blob as shortest test case
+        assert!(Principal::from_text(MANAGEMENT_CANISTER_TEXT).is_ok());
     }
 
-    mod parse {
-        use super::*;
+    #[test]
+    fn convert_from_7_chars_err() {
+        assert_eq!(
+            Principal::from_text("aaaaa-a"),
+            Err(PrincipalError::TextTooSmall())
+        );
+    }
 
-        #[test]
-        fn convert_from_8_chars_ok() {
-            // input must be 8~63 chars including `-`s
-            // using empty blob as shortest test case
-            assert!("aaaaa-aa".parse::<Principal>().is_ok());
-        }
+    #[test]
+    fn convert_from_63_chars_ok() {
+        // input must be 8~63 chars including `-`s
+        // using [0u8; 29] as longest test case
+        assert!(Principal::from_text(
+            "bnkmk-jqaaa-aaaaa-aaaaa-aaaaa-aaaaa-aaaaa-aaaaa-aaaaa-aaaaa-aaa"
+        )
+        .is_ok());
+    }
 
-        #[test]
-        fn convert_from_7_chars_err() {
-            assert_eq!(
-                "aaaaa-a".parse::<Principal>(),
-                Err(PrincipalError::TextTooSmall())
-            );
-        }
-
-        #[test]
-        fn convert_from_text_63_chars_ok() {
-            // input must be 8~63 chars including `-`s
-            // using [0u8; 29] as longest test case
-            assert!(
-                "bnkmk-jqaaa-aaaaa-aaaaa-aaaaa-aaaaa-aaaaa-aaaaa-aaaaa-aaaaa-aaa"
-                    .parse::<Principal>()
-                    .is_ok()
-            );
-        }
-
-        #[test]
-        fn convert_from_text_64_chars_err() {
-            // TODO: The exact error type will be changed
-            assert!(matches!(
+    #[test]
+    fn convert_from_64_chars_err() {
+        // TODO: The exact error type will be changed
+        assert!(matches!(
+            Principal::from_text(
                 "bnkmk-jqaaa-aaaaa-aaaaa-aaaaa-aaaaa-aaaaa-aaaaa-aaaaa-aaaaa-aaaa"
-                    .parse::<Principal>(),
-                Err(PrincipalError::AbnormalTextualFormat(..))
-            ));
-        }
+            ),
+            Err(PrincipalError::AbnormalTextualFormat(..))
+        ));
     }
 }
 
@@ -207,22 +106,23 @@ mod convert_to_bytes {
 
     #[test]
     fn managements_canister_converts_to_empty_slice() {
-        assert_eq!(Principal::management_canister().as_slice(), &[]);
+        assert_eq!(
+            Principal::management_canister().as_slice(),
+            &MANAGEMENT_CANISTER_BYTES
+        );
     }
 
     #[test]
     fn anonymouse_converts_to_single_byte_04() {
-        assert_eq!(Principal::anonymous().as_slice(), &[04]);
+        assert_eq!(Principal::anonymous().as_slice(), &ANONYMOUS_CANISTER_BYTES);
     }
 
     #[test]
-    fn managements_canister_as_ref_empty_slice() {
-        assert_eq!(Principal::management_canister().as_ref(), &[]);
-    }
-
-    #[test]
-    fn anonymouse_converts_as_ref_single_byte_04() {
-        assert_eq!(Principal::anonymous().as_ref(), &[04]);
+    fn test_case_to_bytes_correct() {
+        assert_eq!(
+            Principal::from_text(TEST_CASE_TEXT).unwrap().as_slice(),
+            &TEST_CASE_BYTES
+        );
     }
 }
 
@@ -233,85 +133,45 @@ mod convert_to_text {
     fn managements_canister_to_text_correct() {
         assert_eq!(
             Principal::management_canister().to_text(),
-            "aaaaa-aa".to_string()
+            MANAGEMENT_CANISTER_TEXT.to_string()
         );
     }
 
     #[test]
     fn anonymous_to_text_correct() {
-        assert_eq!(Principal::anonymous().to_text(), "2vxsx-fae".to_string());
-    }
-
-    #[test]
-    fn managements_canister_display_correct() {
-        // impl Display
         assert_eq!(
-            format!("{}", Principal::management_canister()),
-            "aaaaa-aa".to_string()
+            Principal::anonymous().to_text(),
+            ANONYMOUS_CANISTER_TEXT.to_string()
         );
     }
 
     #[test]
-    fn anonymous_display_correct() {
+    fn test_case_to_text_correct() {
         assert_eq!(
-            format!("{}", Principal::anonymous()),
-            "2vxsx-fae".to_string()
+            Principal::try_from_slice(&TEST_CASE_BYTES)
+                .unwrap()
+                .to_text(),
+            TEST_CASE_TEXT.to_string()
         );
-    }
-
-    #[test]
-    fn managements_canister_to_string_correct() {
-        // ToString trait was automatically implemented because impl Display trait
-        assert_eq!(
-            Principal::management_canister().to_string(),
-            "aaaaa-aa".to_string()
-        );
-    }
-
-    #[test]
-    fn anonymous_to_string_correct() {
-        assert_eq!(Principal::anonymous().to_string(), "2vxsx-fae".to_string());
     }
 }
 
 mod ser_de {
-    use ic_types::Principal;
+    use super::*;
     use serde_test::{assert_tokens, Configure, Token};
 
     #[test]
     fn management_canister_serde_match() {
         let p = Principal::management_canister();
-        assert_tokens(&p.compact(), &[Token::Bytes(&[])]);
-        assert_tokens(&p.readable(), &[Token::Str("aaaaa-aa")]);
-    }
-}
-
-mod derive_traits {
-    use super::*;
-
-    #[test]
-    fn impl_copy_and_partial_eq() {
-        // Eq cannot be checked at
-        let x = Principal::management_canister();
-        let y = x;
-        assert!(x.eq(&y));
+        assert_tokens(&p.compact(), &[Token::Bytes(&MANAGEMENT_CANISTER_BYTES)]);
+        assert_tokens(&p.readable(), &[Token::Str(MANAGEMENT_CANISTER_TEXT)]);
     }
 
     #[test]
-    fn impl_ord() {
-        // Ording
-        let x = Principal::management_canister();
-        let y = Principal::anonymous();
-        assert_eq!(x.cmp(&y), std::cmp::Ordering::Less);
-    }
-
-    #[test]
-    fn impl_hash() {
-        use std::hash::Hash;
-        let x = Principal::management_canister();
-        let y = x;
-        let mut hasher = std::collections::hash_map::DefaultHasher::new();
-        assert_eq!(x.hash(&mut hasher), y.hash(&mut hasher));
+    fn test_case_serde_match() {
+        let p = Principal::try_from_slice(&TEST_CASE_BYTES).unwrap();
+        assert_tokens(&p.compact(), &[Token::Bytes(&TEST_CASE_BYTES)]);
+        assert_tokens(&p.readable(), &[Token::Str(TEST_CASE_TEXT)]);
     }
 }
 
