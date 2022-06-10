@@ -274,6 +274,18 @@ mod convert_to_text {
     }
 }
 
+mod ser_de {
+    use ic_types::Principal;
+    use serde_test::{assert_tokens, Configure, Token};
+
+    #[test]
+    fn management_canister_serde_match() {
+        let p = Principal::management_canister();
+        assert_tokens(&p.compact(), &[Token::Bytes(&[])]);
+        assert_tokens(&p.readable(), &[Token::Str("aaaaa-aa")]);
+    }
+}
+
 mod derive_traits {
     use super::*;
 
