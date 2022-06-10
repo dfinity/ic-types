@@ -22,42 +22,8 @@ pub enum PrincipalError {
     TextTooSmall(),
 }
 
-/// A class of principal. Because this should not be exposed it
-#[derive(Debug, Clone, PartialEq, Eq, PartialOrd, Ord, Hash)]
-#[repr(u8)]
-enum PrincipalClass {
-    OpaqueId = 1,
-    SelfAuthenticating = 2,
-    DerivedId = 3,
-    Anonymous = 4,
-    Unassigned,
-}
-
-impl From<PrincipalClass> for u8 {
-    fn from(class: PrincipalClass) -> u8 {
-        match class {
-            PrincipalClass::Unassigned => 0,
-            PrincipalClass::OpaqueId => 1,
-            PrincipalClass::SelfAuthenticating => 2,
-            PrincipalClass::DerivedId => 3,
-            PrincipalClass::Anonymous => 4,
-        }
-    }
-}
-
-impl TryFrom<u8> for PrincipalClass {
-    type Error = PrincipalError;
-
-    fn try_from(byte: u8) -> Result<Self, Self::Error> {
-        match byte {
-            1 => Ok(PrincipalClass::OpaqueId),
-            2 => Ok(PrincipalClass::SelfAuthenticating),
-            3 => Ok(PrincipalClass::DerivedId),
-            4 => Ok(PrincipalClass::Anonymous),
-            _ => Ok(PrincipalClass::Unassigned),
-        }
-    }
-}
+const SELF_AUTHENTICATING_TAG: u8 = 2;
+const ANONYMOUS_TAG: u8 = 4;
 
 /// A principal describes the security context of an identity, namely
 /// any identity that can be authenticated along with a specific
@@ -131,16 +97,14 @@ impl Principal {
         let mut inner = PrincipalInner::from_slice(hash.as_slice());
         // Now add a suffix denoting the identifier as representing a
         // self-authenticating principal.
-        inner.push(PrincipalClass::SelfAuthenticating as u8);
+        inner.push(SELF_AUTHENTICATING_TAG);
 
         Self(inner)
     }
 
     /// An anonymous Principal.
     pub const fn anonymous() -> Self {
-        Self(PrincipalInner::from_slice(&[
-            PrincipalClass::Anonymous as u8
-        ]))
+        Self(PrincipalInner::from_slice(&[ANONYMOUS_TAG]))
     }
 
     /// Attempt to decode a slice into a Principal.
@@ -172,10 +136,9 @@ impl Principal {
 
     /// Attempt to decode a slice into a Principal.
     pub const fn try_from_slice(bytes: &[u8]) -> Result<Self, PrincipalError> {
-        const ANONYMOUS: u8 = PrincipalClass::Anonymous as u8;
         match bytes {
             [] => Ok(Principal::management_canister()),
-            [ANONYMOUS] => Ok(Principal::anonymous()),
+            [ANONYMOUS_TAG] => Ok(Principal::anonymous()),
             bytes @ [..] => match PrincipalInner::try_from_slice(bytes) {
                 None => Err(PrincipalError::BufferTooLong()),
                 Some(v) => Ok(Principal(v)),
