@@ -193,3 +193,11 @@ fn impl_traits() {
 
     assert!(impls::impls!(Principal: Serialize & Deserialize<'static>));
 }
+
+#[test]
+fn long_blobs_ending_04_is_valid_principal() {
+    let blob: [u8; 18] = [
+        10, 116, 105, 100, 0, 0, 0, 0, 0, 144, 0, 51, 1, 1, 0, 0, 0, 4,
+    ];
+    assert!(Principal::try_from_slice(&blob).is_ok());
+}

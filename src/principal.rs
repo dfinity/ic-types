@@ -470,7 +470,6 @@ use inner::PrincipalInner;
 #[cfg(test)]
 mod tests {
     use super::*;
-    use std::str::FromStr;
 
     #[cfg(feature = "serde")]
     #[test]
@@ -490,13 +489,5 @@ mod tests {
             .unwrap(),
             principal
         );
-    }
-
-    #[test]
-    fn long_blobs_ending_04_is_valid_principal() {
-        let blob: [u8; 18] = [
-            10, 116, 105, 100, 0, 0, 0, 0, 0, 144, 0, 51, 1, 1, 0, 0, 0, 4,
-        ];
-        assert!(Principal::try_from_slice(&blob).is_ok());
     }
 }
