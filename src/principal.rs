@@ -22,9 +22,6 @@ pub enum PrincipalError {
     TextTooSmall(),
 }
 
-const SELF_AUTHENTICATING_TAG: u8 = 2;
-const ANONYMOUS_TAG: u8 = 4;
-
 /// A principal describes the security context of an identity, namely
 /// any identity that can be authenticated along with a specific
 /// role. In the case of the Internet Computer this maps currently to
@@ -79,14 +76,29 @@ const ANONYMOUS_TAG: u8 = 4;
 /// );
 /// ```
 #[derive(Debug, Clone, Copy, PartialEq, Eq, PartialOrd, Ord, Hash)]
-pub struct Principal(PrincipalInner);
+#[repr(packed)]
+pub struct Principal {
+    /// Length.
+    len: u8,
+
+    /// The content buffer. When returning slices this should always be sized according to
+    /// `len`.
+    bytes: [u8; Self::MAX_LENGTH_IN_BYTES],
+}
 
 impl Principal {
+    const MAX_LENGTH_IN_BYTES: usize = 29;
     const CRC_LENGTH_IN_BYTES: usize = 4;
+
+    const SELF_AUTHENTICATING_TAG: u8 = 2;
+    const ANONYMOUS_TAG: u8 = 4;
 
     /// An empty principal that marks the system canister.
     pub const fn management_canister() -> Self {
-        Self(PrincipalInner::new())
+        Self {
+            len: 0,
+            bytes: [0; Self::MAX_LENGTH_IN_BYTES],
+        }
     }
 
     /// Right now we are enforcing a Twisted Edwards Curve 25519 point
@@ -94,17 +106,21 @@ impl Principal {
     pub fn self_authenticating<P: AsRef<[u8]>>(public_key: P) -> Self {
         let public_key = public_key.as_ref();
         let hash = Sha224::digest(public_key);
-        let mut inner = PrincipalInner::from_slice(hash.as_slice());
-        // Now add a suffix denoting the identifier as representing a
-        // self-authenticating principal.
-        inner.push(SELF_AUTHENTICATING_TAG);
+        let mut bytes = [0; Self::MAX_LENGTH_IN_BYTES];
+        bytes[..Self::MAX_LENGTH_IN_BYTES - 1].copy_from_slice(hash.as_slice());
+        bytes[Self::MAX_LENGTH_IN_BYTES - 1] = Self::SELF_AUTHENTICATING_TAG;
 
-        Self(inner)
+        Self {
+            len: Self::MAX_LENGTH_IN_BYTES as u8,
+            bytes,
+        }
     }
 
     /// An anonymous Principal.
     pub const fn anonymous() -> Self {
-        Self(PrincipalInner::from_slice(&[ANONYMOUS_TAG]))
+        let mut bytes = [0; Self::MAX_LENGTH_IN_BYTES];
+        bytes[0] = Self::ANONYMOUS_TAG;
+        Self { len: 1, bytes }
     }
 
     /// Attempt to decode a slice into a Principal.
@@ -126,23 +142,39 @@ impl Principal {
     /// # use ic_types::Principal;
     /// const BAR: Principal = Principal::from_slice(&[0; 32]); // Fails, too long
     /// ```
-    pub const fn from_slice(bytes: &[u8]) -> Self {
-        if let Ok(v) = Self::try_from_slice(bytes) {
-            v
-        } else {
-            panic!("slice length exceeds capacity")
+    pub const fn from_slice(slice: &[u8]) -> Self {
+        match Self::try_from_slice(slice) {
+            Ok(v) => v,
+            _ => panic!("slice length exceeds capacity"),
         }
     }
 
     /// Attempt to decode a slice into a Principal.
-    pub const fn try_from_slice(bytes: &[u8]) -> Result<Self, PrincipalError> {
-        match bytes {
-            [] => Ok(Principal::management_canister()),
-            [ANONYMOUS_TAG] => Ok(Principal::anonymous()),
-            bytes @ [..] => match PrincipalInner::try_from_slice(bytes) {
-                None => Err(PrincipalError::BufferTooLong()),
-                Some(v) => Ok(Principal(v)),
-            },
+    pub const fn try_from_slice(slice: &[u8]) -> Result<Self, PrincipalError> {
+        const MAX_LENGTH_IN_BYTES: usize = Principal::MAX_LENGTH_IN_BYTES;
+        match slice.len() {
+            len @ 0..=MAX_LENGTH_IN_BYTES => {
+                // for-loops in const fn are not supported
+                const fn assign_recursive(
+                    mut v: [u8; MAX_LENGTH_IN_BYTES],
+                    slice: &[u8],
+                    index: usize,
+                ) -> [u8; MAX_LENGTH_IN_BYTES] {
+                    if index == 0 {
+                        v
+                    } else {
+                        let index = index - 1;
+                        v[index] = slice[index];
+                        assign_recursive(v, slice, index)
+                    }
+                }
+                let bytes = assign_recursive([0; MAX_LENGTH_IN_BYTES], slice, len);
+                Ok(Self {
+                    len: len as u8,
+                    bytes,
+                })
+            }
+            _ => Err(PrincipalError::BufferTooLong()),
         }
     }
 
@@ -180,14 +212,15 @@ impl Principal {
     }
 
     /// Returns this Principal's bytes.
+    #[inline]
     pub fn as_slice(&self) -> &[u8] {
-        self.as_ref()
+        &self.bytes[..self.len as usize]
     }
 }
 
 impl std::fmt::Display for Principal {
     fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
-        let blob: &[u8] = self.0.as_ref();
+        let blob: &[u8] = self.as_slice();
 
         // calc checksum
         let mut hasher = crc32fast::Hasher::new();
@@ -258,7 +291,7 @@ impl TryFrom<&[u8]> for Principal {
 
 impl AsRef<[u8]> for Principal {
     fn as_ref(&self) -> &[u8] {
-        self.0.as_ref()
+        self.as_slice()
     }
 }
 
@@ -269,7 +302,7 @@ impl serde::Serialize for Principal {
         if serializer.is_human_readable() {
             self.to_text().serialize(serializer)
         } else {
-            serializer.serialize_bytes(self.0.as_ref())
+            serializer.serialize_bytes(self.as_slice())
         }
     }
 }
@@ -333,99 +366,3 @@ impl<'de> serde::Deserialize<'de> for Principal {
         }
     }
 }
-
-mod inner {
-    use sha2::{
-        digest::{generic_array::typenum::Unsigned, OutputSizeUser},
-        Sha224,
-    };
-
-    /// Inner structure of a Principal. This is not meant to be public as the different classes
-    /// of principals are not public.
-    ///
-    /// This is a length (1 byte) and 29 bytes. The length can be 0, but won't ever be longer
-    /// than 29. The current interface spec says that principals cannot be longer than 29 bytes.
-    #[derive(Debug, Clone, Copy, PartialEq, Eq, PartialOrd, Ord, Hash)]
-    #[repr(packed)]
-    pub struct PrincipalInner {
-        /// Length.
-        len: u8,
-
-        /// The content buffer. When returning slices this should always be sized according to
-        /// `len`.
-        bytes: [u8; Self::MAX_LENGTH_IN_BYTES],
-    }
-
-    impl PrincipalInner {
-        const HASH_LEN_IN_BYTES: usize =
-            <<Sha224 as OutputSizeUser>::OutputSize as Unsigned>::USIZE; // 28
-        const MAX_LENGTH_IN_BYTES: usize = Self::HASH_LEN_IN_BYTES + 1; // 29
-
-        pub const fn new() -> Self {
-            PrincipalInner {
-                len: 0,
-                bytes: [0; Self::MAX_LENGTH_IN_BYTES],
-            }
-        }
-
-        /// Panics if the length is over `MAX_LENGTH_IN_BYTES`
-        pub const fn from_slice(slice: &[u8]) -> Self {
-            if let Some(v) = Self::try_from_slice(slice) {
-                v
-            } else {
-                panic!("slice length exceeds capacity")
-            }
-        }
-
-        /// Returns none if the slice length is over `MAX_LENGTH_IN_BYTES`
-        pub const fn try_from_slice(slice: &[u8]) -> Option<Self> {
-            let len = slice.len();
-            const MAX_LENGTH_IN_BYTES: usize = PrincipalInner::MAX_LENGTH_IN_BYTES;
-            if len > MAX_LENGTH_IN_BYTES {
-                None
-            } else {
-                // for-loops in const fn are not supported
-                const fn assign_recursive(
-                    mut v: [u8; MAX_LENGTH_IN_BYTES],
-                    slice: &[u8],
-                    index: usize,
-                ) -> [u8; MAX_LENGTH_IN_BYTES] {
-                    if index == 0 {
-                        v
-                    } else {
-                        let index = index - 1;
-                        v[index] = slice[index];
-                        assign_recursive(v, slice, index)
-                    }
-                }
-                let bytes = assign_recursive([0; MAX_LENGTH_IN_BYTES], slice, len);
-                //bytes.copy_from_slice(slice);
-                Some(PrincipalInner {
-                    bytes,
-                    len: len as u8,
-                })
-            }
-        }
-
-        #[inline]
-        pub fn as_slice(&self) -> &[u8] {
-            &self.bytes[..self.len as usize]
-        }
-
-        pub fn push(&mut self, val: u8) {
-            if self.len >= Self::MAX_LENGTH_IN_BYTES as u8 {
-                panic!("capacity overflow");
-            } else {
-                self.bytes[self.len as usize] = val;
-                self.len += 1;
-            }
-        }
-    }
-
-    impl AsRef<[u8]> for PrincipalInner {
-        fn as_ref(&self) -> &[u8] {
-            self.as_slice()
-        }
-    }
-}
-use inner::PrincipalInner;
