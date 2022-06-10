@@ -472,19 +472,6 @@ mod tests {
     use super::*;
     use std::str::FromStr;
 
-    #[test]
-    #[should_panic]
-    fn inner_fails() {
-        let _ = inner::PrincipalInner::from_slice(&[0; 32]);
-    }
-
-    #[test]
-    fn inner() {
-        let _ = inner::PrincipalInner::from_slice(&[0; 29]);
-        let _ = inner::PrincipalInner::from_slice(&[0; 0]);
-        let _ = inner::PrincipalInner::from_slice(&[0; 4]);
-    }
-
     #[cfg(feature = "serde")]
     #[test]
     fn serializes() {
