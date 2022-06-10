@@ -201,3 +201,19 @@ fn long_blobs_ending_04_is_valid_principal() {
     ];
     assert!(Principal::try_from_slice(&blob).is_ok());
 }
+
+#[test]
+fn self_authenticating_ok() {
+    // self_authenticating doesn't verify the input bytes
+    // this test checks:
+    // 1. Sha224 hash is used
+    // 2. 0x02 was added in the end
+    // 3. total length is 29
+    let p1 = Principal::self_authenticating(&[]);
+    let p2 = Principal::try_from_slice(&[
+        209, 74, 2, 140, 42, 58, 43, 201, 71, 97, 2, 187, 40, 130, 52, 196, 21, 162, 176, 31, 130,
+        142, 166, 42, 197, 179, 228, 47, 2,
+    ])
+    .unwrap();
+    assert_eq!(p1, p2);
+}
