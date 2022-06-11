@@ -103,7 +103,7 @@ impl Principal {
         }
     }
 
-    /// Construct a self-authenticating id from public key
+    /// Construct a self-authenticating ID from public key
     pub fn self_authenticating<P: AsRef<[u8]>>(public_key: P) -> Self {
         let public_key = public_key.as_ref();
         let hash = Sha224::digest(public_key);
@@ -117,7 +117,7 @@ impl Principal {
         }
     }
 
-    /// Construct an anonymous id.
+    /// Construct an anonymous ID.
     pub const fn anonymous() -> Self {
         let mut bytes = [0; Self::MAX_LENGTH_IN_BYTES];
         bytes[0] = Self::ANONYMOUS_TAG;
@@ -131,7 +131,7 @@ impl Principal {
     /// Panics if the slice is longer than 29 bytes.
     #[deprecated(
         since = "0.4.0",
-        note = "use Principal::try_from_slice for better error handling"
+        note = "use `Principal::try_from_slice` for better error handling"
     )]
     pub const fn from_slice(slice: &[u8]) -> Self {
         match Self::try_from_slice(slice) {
