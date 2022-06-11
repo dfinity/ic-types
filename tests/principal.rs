@@ -1,3 +1,5 @@
+#![allow(deprecated)]
+
 use ic_types::Principal;
 use ic_types::PrincipalError;
 

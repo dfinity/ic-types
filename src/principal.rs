@@ -128,21 +128,11 @@ impl Principal {
     ///
     /// # Panics
     ///
-    /// Panics if the bytes can't be interpreted.
-    ///
-    /// # Examples
-    ///
-    /// ```
-    /// # use ic_types::Principal;
-    /// const FOO: Principal = Principal::from_slice(&[0; 29]);    // normal length
-    /// const MGMT: Principal = Principal::from_slice(&[]);        // management
-    /// const OPQ: Principal = Principal::from_slice(&[4,3,2,1]);  // opaque id
-    /// ```
-    ///
-    /// ```compile_fail
-    /// # use ic_types::Principal;
-    /// const BAR: Principal = Principal::from_slice(&[0; 32]); // Fails, too long
-    /// ```
+    /// Panics if the slice is longer than 29 bytes.
+    #[deprecated(
+        since = "0.4.0",
+        note = "use Principal::try_from_slice for better error handling"
+    )]
     pub const fn from_slice(slice: &[u8]) -> Self {
         match Self::try_from_slice(slice) {
             Ok(v) => v,
