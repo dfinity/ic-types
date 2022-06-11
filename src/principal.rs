@@ -155,21 +155,12 @@ impl Principal {
         const MAX_LENGTH_IN_BYTES: usize = Principal::MAX_LENGTH_IN_BYTES;
         match slice.len() {
             len @ 0..=MAX_LENGTH_IN_BYTES => {
-                // for-loops in const fn are not supported
-                const fn assign_recursive(
-                    mut v: [u8; MAX_LENGTH_IN_BYTES],
-                    slice: &[u8],
-                    index: usize,
-                ) -> [u8; MAX_LENGTH_IN_BYTES] {
-                    if index == 0 {
-                        v
-                    } else {
-                        let index = index - 1;
-                        v[index] = slice[index];
-                        assign_recursive(v, slice, index)
-                    }
+                let mut bytes = [0; MAX_LENGTH_IN_BYTES];
+                let mut i = 0;
+                while i < len {
+                    bytes[i] = slice[i];
+                    i += 1;
                 }
-                let bytes = assign_recursive([0; MAX_LENGTH_IN_BYTES], slice, len);
                 Ok(Self {
                     len: len as u8,
                     bytes,
