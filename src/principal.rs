@@ -5,7 +5,7 @@ use std::convert::TryFrom;
 use std::fmt::Write;
 use thiserror::Error;
 
-/// An error happened while encoding, decoding or serializing a principal.
+/// An error happened while encoding, decoding or serializing a [`Principal`].
 #[derive(Error, Clone, Debug, Eq, PartialEq)]
 #[cfg_attr(feature = "serde", derive(Serialize, Deserialize))]
 pub enum PrincipalError {
@@ -22,11 +22,13 @@ pub enum PrincipalError {
     TextTooSmall(),
 }
 
-/// A principal describes the security context of an identity, namely
-/// any identity that can be authenticated along with a specific
-/// role. In the case of the Internet Computer this maps currently to
-/// the identities that can be authenticated by a canister. For example,
-/// a canister ID is a Principal. So is a user.
+/// Generic ID on Internet Computer
+///
+/// Principals are generic identifiers for canisters, users
+/// and possibly other concepts in the future.
+/// As far as most uses of the IC are concerned they are
+/// opaque binary blobs with a length between 0 and 29 bytes,
+/// and there is intentionally no mechanism to tell canister ids and user ids apart.
 ///
 /// Note a principal is not necessarily tied with a public key-pair,
 /// yet we need at least a key-pair of a related principal to sign
@@ -93,7 +95,7 @@ impl Principal {
     const SELF_AUTHENTICATING_TAG: u8 = 2;
     const ANONYMOUS_TAG: u8 = 4;
 
-    /// An empty principal that marks the system canister.
+    /// Construct a [`Principal`] of the IC management canister
     pub const fn management_canister() -> Self {
         Self {
             len: 0,
@@ -101,8 +103,7 @@ impl Principal {
         }
     }
 
-    /// Right now we are enforcing a Twisted Edwards Curve 25519 point
-    /// as the public key.
+    /// Construct a self-authenticating id from public key
     pub fn self_authenticating<P: AsRef<[u8]>>(public_key: P) -> Self {
         let public_key = public_key.as_ref();
         let hash = Sha224::digest(public_key);
@@ -116,14 +117,14 @@ impl Principal {
         }
     }
 
-    /// An anonymous Principal.
+    /// Construct an anonymous id.
     pub const fn anonymous() -> Self {
         let mut bytes = [0; Self::MAX_LENGTH_IN_BYTES];
         bytes[0] = Self::ANONYMOUS_TAG;
         Self { len: 1, bytes }
     }
 
-    /// Attempt to decode a slice into a Principal.
+    /// Construct a [`Principal`] from a slice of bytes.
     ///
     /// # Panics
     ///
@@ -149,7 +150,7 @@ impl Principal {
         }
     }
 
-    /// Attempt to decode a slice into a Principal.
+    /// Construct a [`Principal`] from a slice of bytes.
     pub const fn try_from_slice(slice: &[u8]) -> Result<Self, PrincipalError> {
         const MAX_LENGTH_IN_BYTES: usize = Principal::MAX_LENGTH_IN_BYTES;
         match slice.len() {
@@ -178,9 +179,7 @@ impl Principal {
         }
     }
 
-    /// Parse the text format for canister IDs (e.g., `jkies-sibbb-ap6`).
-    ///
-    /// The text format follows the public spec (see Textual IDs section).
+    /// Parse a [`Principal`] from text representation.
     pub fn from_text<S: AsRef<str>>(text: S) -> Result<Self, PrincipalError> {
         // Strategy: Parse very liberally, then pretty-print and compare output
         // This is both simpler and yields better error messages
@@ -205,13 +204,12 @@ impl Principal {
         }
     }
 
-    /// Returns this Principal's text representation. The text representation is described
-    /// in the spec.
+    /// Convert [`Principal`] to text representation.
     pub fn to_text(&self) -> String {
         format!("{}", self)
     }
 
-    /// Returns this Principal's bytes.
+    /// Return the [`Principal`]'s underlying slice of bytes.
     #[inline]
     pub fn as_slice(&self) -> &[u8] {
         &self.bytes[..self.len as usize]
@@ -263,7 +261,6 @@ impl TryFrom<&str> for Principal {
     }
 }
 
-/// Vector TryFrom. The slice and array version of this trait are defined below.
 impl TryFrom<Vec<u8>> for Principal {
     type Error = PrincipalError;
 
@@ -280,7 +277,6 @@ impl TryFrom<&Vec<u8>> for Principal {
     }
 }
 
-/// Implement try_from for a generic sized slice.
 impl TryFrom<&[u8]> for Principal {
     type Error = PrincipalError;
 
@@ -313,8 +309,8 @@ mod deserialize {
     use super::Principal;
     use std::convert::TryFrom;
 
-    /// Simple visitor for deserialization from bytes. We don't support other number types
-    /// as there's no need for it.
+    // Simple visitor for deserialization from bytes. We don't support other number types
+    // as there's no need for it.
     pub(super) struct PrincipalVisitor;
 
     impl<'de> serde::de::Visitor<'de> for PrincipalVisitor {
