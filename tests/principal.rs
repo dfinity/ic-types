@@ -32,7 +32,7 @@ mod convert_from_bytes {
     fn try_from_slice_length_30_err() {
         assert_eq!(
             Principal::try_from_slice(&[0u8; 30]),
-            Err(PrincipalError::BufferTooLong())
+            Err(PrincipalError::BytesTooLong())
         );
     }
 

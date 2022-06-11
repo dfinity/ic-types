@@ -9,8 +9,8 @@ use thiserror::Error;
 #[derive(Error, Clone, Debug, Eq, PartialEq)]
 #[cfg_attr(feature = "serde", derive(Serialize, Deserialize))]
 pub enum PrincipalError {
-    #[error("Buffer is too long.")]
-    BufferTooLong(),
+    #[error("Bytes is longer than 29 bytes.")]
+    BytesTooLong(),
 
     #[error(r#"Invalid textual format: expected "{0}""#)]
     AbnormalTextualFormat(Principal),
@@ -22,7 +22,7 @@ pub enum PrincipalError {
     TextTooSmall(),
 }
 
-/// Generic ID on Internet Computer
+/// Generic ID on Internet Computer.
 ///
 /// Principals are generic identifiers for canisters, users
 /// and possibly other concepts in the future.
@@ -156,7 +156,7 @@ impl Principal {
                     bytes,
                 })
             }
-            _ => Err(PrincipalError::BufferTooLong()),
+            _ => Err(PrincipalError::BytesTooLong()),
         }
     }
 
