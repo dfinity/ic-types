@@ -67,22 +67,14 @@ mod convert_from_text {
     }
 
     #[test]
-    fn convert_from_8_chars_ok() {
+    fn convert_from_management_canister_text_ok() {
         // input must be 8~63 chars including `-`s
         // using empty blob as shortest test case
         assert!(Principal::from_text(MANAGEMENT_CANISTER_TEXT).is_ok());
     }
 
     #[test]
-    fn convert_from_7_chars_err() {
-        assert_eq!(
-            Principal::from_text("aaaaa-a"),
-            Err(PrincipalError::TextTooSmall())
-        );
-    }
-
-    #[test]
-    fn convert_from_63_chars_ok() {
+    fn convert_from_29_0u8_ok() {
         // input must be 8~63 chars including `-`s
         // using [0u8; 29] as longest test case
         assert!(Principal::from_text(
@@ -92,14 +84,75 @@ mod convert_from_text {
     }
 
     #[test]
-    fn convert_from_64_chars_err() {
-        // TODO: The exact error type will be changed
-        assert!(matches!(
+    fn convert_from_6a_invalid_base_32() {
+        assert_eq!(
+            Principal::from_text("aaaaa-a"),
+            Err(PrincipalError::InvalidBase32())
+        );
+    }
+
+    #[test]
+    fn convert_from_5a_text_too_short() {
+        assert_eq!(
+            Principal::from_text("aaaaa"),
+            Err(PrincipalError::TextTooShort())
+        );
+    }
+
+    #[test]
+    fn convert_from_30_0u8_text_too_long() {
+        assert_eq!(
             Principal::from_text(
-                "bnkmk-jqaaa-aaaaa-aaaaa-aaaaa-aaaaa-aaaaa-aaaaa-aaaaa-aaaaa-aaaa"
+                "aacd5-niaaa-aaaaa-aaaaa-aaaaa-aaaaa-aaaaa-aaaaa-aaaaa-aaaaa-aaaaa"
             ),
-            Err(PrincipalError::AbnormalTextualFormat(..))
-        ));
+            Err(PrincipalError::TextTooLong())
+        );
+    }
+
+    #[test]
+    fn convert_from_wrong_dash_position_err() {
+        assert_eq!(
+            Principal::from_text("aaaaaaa"),
+            Err(PrincipalError::AbnormalGrouped(
+                Principal::management_canister()
+            ))
+        );
+        assert_eq!(
+            Principal::from_text("aaaaaa-a"),
+            Err(PrincipalError::AbnormalGrouped(
+                Principal::management_canister()
+            ))
+        );
+        assert_eq!(
+            Principal::from_text("aaaaaaa-"),
+            Err(PrincipalError::AbnormalGrouped(
+                Principal::management_canister()
+            ))
+        );
+        assert_eq!(
+            Principal::from_text("-aaaaaaa"),
+            Err(PrincipalError::AbnormalGrouped(
+                Principal::management_canister()
+            ))
+        );
+        assert_eq!(
+            Principal::from_text("aaa-aaaa"),
+            Err(PrincipalError::AbnormalGrouped(
+                Principal::management_canister()
+            ))
+        );
+    }
+
+    #[test]
+    fn convert_from_capitals_ok() {
+        assert_eq!(
+            Principal::from_text("AAAAA-AA"),
+            Ok(Principal::management_canister())
+        );
+        assert_eq!(
+            Principal::from_text("aaaaa-AA"),
+            Ok(Principal::management_canister())
+        );
     }
 }
 

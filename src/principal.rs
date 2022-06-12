@@ -12,14 +12,20 @@ pub enum PrincipalError {
     #[error("Bytes is longer than 29 bytes.")]
     BytesTooLong(),
 
-    #[error(r#"Invalid textual format: expected "{0}""#)]
-    AbnormalTextualFormat(Principal),
+    #[error("Text must be in valid Base32 encoding.")]
+    InvalidBase32(),
 
-    #[error("Text must be a base 32 string.")]
-    InvalidTextualFormatNotBase32(),
+    #[error("Text is too short.")]
+    TextTooShort(),
 
-    #[error("Text cannot be converted to a Principal; too small.")]
-    TextTooSmall(),
+    #[error("Text is too long.")]
+    TextTooLong(),
+
+    #[error("CRC32 check sequence doesn't match with calculated from Principal bytes.")]
+    CheckSequenceNotMatch(),
+
+    #[error(r#"Text should be separated by - (dash) every 5 characters: expected "{0}""#)]
+    AbnormalGrouped(Principal),
 }
 
 /// Generic ID on Internet Computer.
@@ -166,22 +172,38 @@ impl Principal {
         // This is both simpler and yields better error messages
 
         let mut s = text.as_ref().to_string();
-        s.make_ascii_lowercase();
+        s.make_ascii_uppercase();
         s.retain(|c| c != '-');
-        match base32::decode(base32::Alphabet::RFC4648 { padding: false }, &s) {
-            Some(mut bytes) => {
-                if bytes.len() < Principal::CRC_LENGTH_IN_BYTES {
-                    return Err(PrincipalError::TextTooSmall());
+        match data_encoding::BASE32_NOPAD.decode(s.as_bytes()) {
+            Ok(bytes) => {
+                if bytes.len() < Self::CRC_LENGTH_IN_BYTES {
+                    return Err(PrincipalError::TextTooShort());
                 }
-                let result = Self::try_from(bytes.split_off(Principal::CRC_LENGTH_IN_BYTES))?;
+
+                let crc_bytes = &bytes[..Self::CRC_LENGTH_IN_BYTES];
+                let data_bytes = &bytes[Self::CRC_LENGTH_IN_BYTES..];
+                if data_bytes.len() > Self::MAX_LENGTH_IN_BYTES {
+                    return Err(PrincipalError::TextTooLong());
+                }
+
+                if crc32fast::hash(data_bytes).to_be_bytes() != crc_bytes {
+                    return Err(PrincipalError::CheckSequenceNotMatch());
+                }
+
+                // Already checked data_bytes.len() <= MAX_LENGTH_IN_BYTES
+                // safe to unwrap here
+                let result = Self::try_from_slice(data_bytes).unwrap();
                 let expected = format!("{}", result);
 
-                if text.as_ref() != expected {
-                    return Err(PrincipalError::AbnormalTextualFormat(result));
+                // In the Spec:
+                // The textual representation is conventionally printed with lower case letters,
+                // but parsed case-insensitively.
+                if text.as_ref().to_ascii_lowercase() != expected {
+                    return Err(PrincipalError::AbnormalGrouped(result));
                 }
                 Ok(result)
             }
-            None => Err(PrincipalError::InvalidTextualFormatNotBase32()),
+            _ => Err(PrincipalError::InvalidBase32()),
         }
     }
 
@@ -202,9 +224,7 @@ impl std::fmt::Display for Principal {
         let blob: &[u8] = self.as_slice();
 
         // calc checksum
-        let mut hasher = crc32fast::Hasher::new();
-        hasher.update(blob);
-        let checksum = hasher.finalize();
+        let checksum = crc32fast::hash(blob);
 
         // combine blobs
         let mut bytes = vec![];
@@ -212,7 +232,7 @@ impl std::fmt::Display for Principal {
         bytes.extend_from_slice(blob);
 
         // base32
-        let mut s = base32::encode(base32::Alphabet::RFC4648 { padding: false }, &bytes);
+        let mut s = data_encoding::BASE32_NOPAD.encode(&bytes);
         s.make_ascii_lowercase();
 
         // write out string with dashes
