@@ -144,7 +144,7 @@ mod convert_from_text {
     }
 
     #[test]
-    fn convert_from_capitals_ok() {
+    fn convert_from_uppercase_ok() {
         assert_eq!(
             Principal::from_text("AAAAA-AA"),
             Ok(Principal::management_canister())
