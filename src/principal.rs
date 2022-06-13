@@ -334,17 +334,6 @@ mod deserialize {
         {
             Principal::try_from(value).map_err(E::custom)
         }
-        /// This visitor should only be used by the Candid crate.
-        fn visit_byte_buf<E>(self, v: Vec<u8>) -> Result<Self::Value, E>
-        where
-            E: serde::de::Error,
-        {
-            if v.is_empty() || v[0] != 2u8 {
-                Err(E::custom("Not called by Candid"))
-            } else {
-                Principal::try_from(&v[1..]).map_err(E::custom)
-            }
-        }
     }
 }
 
