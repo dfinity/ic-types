@@ -7,8 +7,10 @@ pub type Sha256Digest = [u8; 32];
 
 /// Principal related types and traits.
 pub mod principal;
+#[doc(inline)]
 pub use principal::{Principal, PrincipalError};
 
 /// Hash Tree types and traits.
 pub mod hash_tree;
+#[doc(inline)]
 pub use hash_tree::HashTree;
