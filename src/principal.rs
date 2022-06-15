@@ -84,7 +84,6 @@ pub enum PrincipalError {
 /// );
 /// ```
 #[derive(Debug, Clone, Copy, PartialEq, Eq, PartialOrd, Ord, Hash)]
-#[repr(packed)]
 pub struct Principal {
     /// Length.
     len: u8,
