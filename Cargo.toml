@@ -6,6 +6,7 @@ edition = "2018"
 description = "Types related to the Internet Computer Public Specification."
 homepage = "https://docs.rs/ic-types"
 documentation = "https://docs.rs/ic-types"
+repository="https://github.com/dfinity/ic-types"
 license = "Apache-2.0"
 readme = "README.md"
 categories = ["api-bindings", "data-structures", "no-std"]
