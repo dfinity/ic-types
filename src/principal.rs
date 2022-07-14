@@ -307,6 +307,7 @@ impl serde::Serialize for Principal {
 #[cfg(feature = "serde")]
 mod deserialize {
     use super::Principal;
+    use super::PrincipalError;
     use std::convert::TryFrom;
 
     // Simple visitor for deserialization from bytes. We don't support other number types
@@ -331,7 +332,17 @@ mod deserialize {
         where
             E: serde::de::Error,
         {
-            Principal::try_from(value).map_err(E::custom)
+            let len = value.len();
+            if len > Principal::MAX_LENGTH_IN_BYTES {
+                Err(E::custom(PrincipalError::BytesTooLong()))
+            } else {
+                let mut bytes = [0; Principal::MAX_LENGTH_IN_BYTES];
+                bytes[0..len].copy_from_slice(value);
+                Ok(Principal {
+                    len: len as u8,
+                    bytes,
+                })
+            }
         }
         /// This visitor should only be used by the Candid crate.
         fn visit_byte_buf<E>(self, v: Vec<u8>) -> Result<Self::Value, E>
