@@ -7,6 +7,11 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.4.2] - 2022-08-30
+
+### Changed
+- Add a function `list_paths` to list all paths containing values in a hash tree.
+
 ## [0.4.1] - 2022-07-15
 
 ### Changed
