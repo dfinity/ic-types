@@ -406,7 +406,6 @@ impl<'a> HashTreeNode<'a> {
             (None, Labeled(_, _) | Fork(_)) => Error,
 
             (Some(LLR::Unknown), _) => Unknown,
-            (Some(LLR::Absent | LLR::Continue), Empty() | Pruned(_) | Leaf(_)) => Unknown,
             (Some(LLR::Absent | LLR::Continue), _) => Absent,
         }
     }
