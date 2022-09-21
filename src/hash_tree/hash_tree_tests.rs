@@ -102,20 +102,313 @@ fn spec_example_pruned() {
 }
 
 #[test]
-fn can_lookup_paths() {
+fn can_lookup_paths_1() {
     let tree = fork(
         label("label 1", empty()),
         fork(
             pruned([1; 32]),
             fork(
-                label("label 2", leaf(vec![1, 2, 3, 4, 5, 6])),
-                label("label 3", empty()),
+                label("label 3", leaf(vec![1, 2, 3, 4, 5, 6])),
+                label("label 5", empty()),
+            ),
+        ),
+    );
+
+    assert_eq!(
+        tree.lookup_path(&["label 0".into()]),
+        LookupResult::Absent
+    );
+    assert_eq!(
+        tree.lookup_path(&["label 1".into()]),
+        LookupResult::Absent
+    );
+    assert_eq!(
+        tree.lookup_path(&["label 2".into()]),
+        LookupResult::Unknown
+    );
+    assert_eq!(
+        tree.lookup_path(&["label 3".into()]),
+        LookupResult::Found(&[1, 2, 3, 4, 5, 6])
+    );
+    assert_eq!(
+        tree.lookup_path(&["label 4".into()]),
+        LookupResult::Absent
+    );
+    assert_eq!(
+        tree.lookup_path(&["label 5".into()]),
+        LookupResult::Absent
+    );
+    assert_eq!(
+        tree.lookup_path(&["label 6".into()]),
+        LookupResult::Absent
+    );
+}
+
+#[test]
+fn can_lookup_paths_2() {
+    let tree = fork(
+        label("label 1", empty()),
+        fork(
+            fork(
+                label("label 3", leaf(vec![1, 2, 3, 4, 5, 6])),
+                label("label 5", empty()),
+            ),
+            pruned([1; 32]),
+        ),
+    );
+
+    assert_eq!(
+        tree.lookup_path(&["label 0".into()]),
+        LookupResult::Absent
+    );
+    assert_eq!(
+        tree.lookup_path(&["label 1".into()]),
+        LookupResult::Absent
+    );
+    assert_eq!(
+        tree.lookup_path(&["label 2".into()]),
+        LookupResult::Absent
+    );
+    assert_eq!(
+        tree.lookup_path(&["label 3".into()]),
+        LookupResult::Found(&[1, 2, 3, 4, 5, 6])
+    );
+    assert_eq!(
+        tree.lookup_path(&["label 4".into()]),
+        LookupResult::Absent
+    );
+    assert_eq!(
+        tree.lookup_path(&["label 5".into()]),
+        LookupResult::Absent
+    );
+    assert_eq!(
+        tree.lookup_path(&["label 6".into()]),
+        LookupResult::Unknown
+    );
+}
+
+#[test]
+fn can_lookup_paths_3() {
+    let tree = fork(
+        pruned([0; 32]),
+        fork(
+            pruned([1; 32]),
+            fork(
+                label("label 3", leaf(vec![1, 2, 3, 4, 5, 6])),
+                label("label 5", empty()),
             ),
         ),
     );
 
     assert_eq!(
         tree.lookup_path(&["label 2".into()]),
+        LookupResult::Unknown
+    );
+    assert_eq!(
+        tree.lookup_path(&["label 3".into()]),
         LookupResult::Found(&[1, 2, 3, 4, 5, 6])
-    )
+    );
+    assert_eq!(
+        tree.lookup_path(&["label 4".into()]),
+        LookupResult::Absent
+    );
+    assert_eq!(
+        tree.lookup_path(&["label 5".into()]),
+        LookupResult::Absent
+    );
+    assert_eq!(
+        tree.lookup_path(&["label 6".into()]),
+        LookupResult::Absent
+    );
+}
+
+#[test]
+fn can_lookup_paths_4() {
+    let tree = fork(
+        pruned([0; 32]),
+        fork(
+            fork(
+                label("label 3", leaf(vec![1, 2, 3, 4, 5, 6])),
+                label("label 5", empty()),
+            ),
+            pruned([1; 32]),
+        ),
+    );
+
+    assert_eq!(
+        tree.lookup_path(&["label 2".into()]),
+        LookupResult::Unknown
+    );
+    assert_eq!(
+        tree.lookup_path(&["label 3".into()]),
+        LookupResult::Found(&[1, 2, 3, 4, 5, 6])
+    );
+    assert_eq!(
+        tree.lookup_path(&["label 4".into()]),
+        LookupResult::Absent
+    );
+    assert_eq!(
+        tree.lookup_path(&["label 5".into()]),
+        LookupResult::Absent
+    );
+    assert_eq!(
+        tree.lookup_path(&["label 6".into()]),
+        LookupResult::Unknown
+    );
+}
+
+#[test]
+fn can_lookup_paths_5() {
+    let tree = fork(
+        fork(
+            pruned([1; 32]),
+            fork(
+                label("label 3", leaf(vec![1, 2, 3, 4, 5, 6])),
+                label("label 5", empty()),
+            ),
+        ),
+        label("label 7", empty()),
+    );
+
+    assert_eq!(
+        tree.lookup_path(&["label 2".into()]),
+        LookupResult::Unknown
+    );
+    assert_eq!(
+        tree.lookup_path(&["label 3".into()]),
+        LookupResult::Found(&[1, 2, 3, 4, 5, 6])
+    );
+    assert_eq!(
+        tree.lookup_path(&["label 4".into()]),
+        LookupResult::Absent
+    );
+    assert_eq!(
+        tree.lookup_path(&["label 5".into()]),
+        LookupResult::Absent
+    );
+    assert_eq!(
+        tree.lookup_path(&["label 6".into()]),
+        LookupResult::Absent
+    );
+    assert_eq!(
+        tree.lookup_path(&["label 7".into()]),
+        LookupResult::Absent
+    );
+    assert_eq!(
+        tree.lookup_path(&["label 8".into()]),
+        LookupResult::Absent
+    );
+}
+
+#[test]
+fn can_lookup_paths_6() {
+    let tree = fork(
+        fork(
+            fork(
+                label("label 3", leaf(vec![1, 2, 3, 4, 5, 6])),
+                label("label 5", empty()),
+            ),
+            pruned([1; 32]),
+        ),
+        label("label 7", empty()),
+    );
+
+    assert_eq!(
+        tree.lookup_path(&["label 2".into()]),
+        LookupResult::Absent
+    );
+    assert_eq!(
+        tree.lookup_path(&["label 3".into()]),
+        LookupResult::Found(&[1, 2, 3, 4, 5, 6])
+    );
+    assert_eq!(
+        tree.lookup_path(&["label 4".into()]),
+        LookupResult::Absent
+    );
+    assert_eq!(
+        tree.lookup_path(&["label 5".into()]),
+        LookupResult::Absent
+    );
+    assert_eq!(
+        tree.lookup_path(&["label 6".into()]),
+        LookupResult::Unknown
+    );
+    assert_eq!(
+        tree.lookup_path(&["label 7".into()]),
+        LookupResult::Absent
+    );
+    assert_eq!(
+        tree.lookup_path(&["label 8".into()]),
+        LookupResult::Absent
+    );
+}
+
+#[test]
+fn can_lookup_paths_7() {
+    let tree = fork(
+        fork(
+            pruned([1; 32]),
+            fork(
+                label("label 3", leaf(vec![1, 2, 3, 4, 5, 6])),
+                label("label 5", empty()),
+            ),
+        ),
+        pruned([0; 32]),
+    );
+
+    assert_eq!(
+        tree.lookup_path(&["label 2".into()]),
+        LookupResult::Unknown
+    );
+    assert_eq!(
+        tree.lookup_path(&["label 3".into()]),
+        LookupResult::Found(&[1, 2, 3, 4, 5, 6])
+    );
+    assert_eq!(
+        tree.lookup_path(&["label 4".into()]),
+        LookupResult::Absent
+    );
+    assert_eq!(
+        tree.lookup_path(&["label 5".into()]),
+        LookupResult::Absent
+    );
+    assert_eq!(
+        tree.lookup_path(&["label 6".into()]),
+        LookupResult::Unknown
+    );
+}
+
+#[test]
+fn can_lookup_paths_8() {
+    let tree = fork(
+        fork(
+            fork(
+                label("label 3", leaf(vec![1, 2, 3, 4, 5, 6])),
+                label("label 5", empty()),
+            ),
+            pruned([1; 32]),
+        ),
+        pruned([0; 32]),
+    );
+
+    assert_eq!(
+        tree.lookup_path(&["label 2".into()]),
+        LookupResult::Absent
+    );
+    assert_eq!(
+        tree.lookup_path(&["label 3".into()]),
+        LookupResult::Found(&[1, 2, 3, 4, 5, 6])
+    );
+    assert_eq!(
+        tree.lookup_path(&["label 4".into()]),
+        LookupResult::Absent
+    );
+    assert_eq!(
+        tree.lookup_path(&["label 5".into()]),
+        LookupResult::Absent
+    );
+    assert_eq!(
+        tree.lookup_path(&["label 6".into()]),
+        LookupResult::Unknown
+    );
 }
