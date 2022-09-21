@@ -352,7 +352,7 @@ impl<'a> HashTreeNode<'a> {
     /// is not necessary.
     fn lookup_label(&self, label: &Label) -> LookupLabelResult {
         match self {
-            // If this node is a labeled node, check for the name. This assume a
+            // If this node is a labeled node, check for the name.
             HashTreeNode::Labeled(l, node) => match label.cmp(l) {
                 std::cmp::Ordering::Greater => LookupLabelResult::Greater,
                 std::cmp::Ordering::Equal => LookupLabelResult::Found(node.as_ref()),
@@ -363,18 +363,18 @@ impl<'a> HashTreeNode<'a> {
             HashTreeNode::Fork(nodes) => {
                 let left_label = nodes.0.lookup_label(label);
                 match left_label {
-                    // On continue or unknown, look on the right side of the fork.
-                    // If it cannot be found on the right, return Unknown though.
-                    LookupLabelResult::Greater | LookupLabelResult::Unknown => {
+                    // On greater or unknown, look on the right side of the fork.
+                    LookupLabelResult::Greater => {
                         let right_label = nodes.1.lookup_label(label);
                         match right_label {
-                            LookupLabelResult::Less => {
-                                if matches!(left_label, LookupLabelResult::Unknown) {
-                                    LookupLabelResult::Unknown
-                                } else {
-                                    LookupLabelResult::Absent
-                                }
-                            }
+                            LookupLabelResult::Less => LookupLabelResult::Absent,
+                            result => result,
+                        }
+                    }
+                    LookupLabelResult::Unknown => {
+                        let right_label = nodes.1.lookup_label(label);
+                        match right_label {
+                            LookupLabelResult::Less => LookupLabelResult::Unknown,
                             result => result,
                         }
                     }
