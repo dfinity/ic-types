@@ -214,8 +214,11 @@ enum LookupLabelResult<'node> {
     /// Same as absent, but some leaves were pruned and so it's impossible to know.
     Unknown,
 
-    /// The label was not found, but could still be somewhere else.
-    Continue,
+    /// The label was not found, but could still be to the left.
+    Less,
+
+    /// The label was not found, but could still be to the right.
+    Greater,
 
     /// The label was found. Contains a reference to the [HashTreeNode].
     Found(&'node HashTreeNode<'node>),
@@ -349,29 +352,29 @@ impl<'a> HashTreeNode<'a> {
     /// is not necessary.
     fn lookup_label(&self, label: &Label) -> LookupLabelResult {
         match self {
-            // If this node is a labeled node, check for the name. This assume a
+            // If this node is a labeled node, check for the name.
             HashTreeNode::Labeled(l, node) => match label.cmp(l) {
-                std::cmp::Ordering::Greater => LookupLabelResult::Continue,
+                std::cmp::Ordering::Greater => LookupLabelResult::Greater,
                 std::cmp::Ordering::Equal => LookupLabelResult::Found(node.as_ref()),
                 // If this node has a smaller label than the one we're looking for, shortcut
                 // out of this search (sorted tree), we looked too far.
-                std::cmp::Ordering::Less => LookupLabelResult::Absent,
+                std::cmp::Ordering::Less => LookupLabelResult::Less,
             },
             HashTreeNode::Fork(nodes) => {
                 let left_label = nodes.0.lookup_label(label);
                 match left_label {
-                    // On continue or unknown, look on the right side of the fork.
-                    // If it cannot be found on the right, return Unknown though.
-                    LookupLabelResult::Continue | LookupLabelResult::Unknown => {
+                    // On greater or unknown, look on the right side of the fork.
+                    LookupLabelResult::Greater => {
                         let right_label = nodes.1.lookup_label(label);
                         match right_label {
-                            LookupLabelResult::Absent => {
-                                if matches!(left_label, LookupLabelResult::Unknown) {
-                                    LookupLabelResult::Unknown
-                                } else {
-                                    LookupLabelResult::Absent
-                                }
-                            }
+                            LookupLabelResult::Less => LookupLabelResult::Absent,
+                            result => result,
+                        }
+                    }
+                    LookupLabelResult::Unknown => {
+                        let right_label = nodes.1.lookup_label(label);
+                        match right_label {
+                            LookupLabelResult::Less => LookupLabelResult::Unknown,
                             result => result,
                         }
                     }
@@ -380,7 +383,7 @@ impl<'a> HashTreeNode<'a> {
             }
             HashTreeNode::Pruned(_) => LookupLabelResult::Unknown,
             // Any other type of node and we need to look for more forks.
-            _ => LookupLabelResult::Continue,
+            _ => LookupLabelResult::Absent,
         }
     }
 
@@ -406,8 +409,7 @@ impl<'a> HashTreeNode<'a> {
             (None, Labeled(_, _) | Fork(_)) => Error,
 
             (Some(LLR::Unknown), _) => Unknown,
-            (Some(LLR::Absent | LLR::Continue), Empty() | Pruned(_) | Leaf(_)) => Unknown,
-            (Some(LLR::Absent | LLR::Continue), _) => Absent,
+            (Some(LLR::Absent | LLR::Greater | LLR::Less), _) => Absent,
         }
     }
 
