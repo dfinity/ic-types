@@ -7,7 +7,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
-## [0.5.0] - 2022-09-20
+## [0.5.0] - 2022-09-22
 
 ### Changed
 - Make the function `lookup_path` and `lookup_label` comply with Interface Spec.
