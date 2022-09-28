@@ -113,7 +113,7 @@ impl<'a> HashTree<'a> {
         self.root.lookup_path(&mut path.into_iter())
     }
 
-    pub fn list_paths<'p>(&self) -> Vec<Vec<Label> > {
+    pub fn list_paths(&self) -> Vec<Vec<Label>> {
         self.root.list_paths(&vec![])
     }
 }
@@ -413,17 +413,19 @@ impl<'a> HashTreeNode<'a> {
         }
     }
 
-    fn list_paths(&self, path: &Vec<Label>) -> Vec<Vec<Label> > {
+    fn list_paths(&self, path: &Vec<Label>) -> Vec<Vec<Label>> {
         match self {
             HashTreeNode::Empty() => vec![],
-            HashTreeNode::Fork(nodes) => [nodes.0.list_paths(path), nodes.1.list_paths(path)].concat(),
+            HashTreeNode::Fork(nodes) => {
+                [nodes.0.list_paths(path), nodes.1.list_paths(path)].concat()
+            }
             HashTreeNode::Leaf(_) => vec![path.clone()],
             HashTreeNode::Labeled(l, node) => {
                 let mut path = path.clone();
                 path.push(l.clone().into_owned());
                 node.list_paths(&path)
             }
-            HashTreeNode::Pruned(_) => vec![]
+            HashTreeNode::Pruned(_) => vec![],
         }
     }
 }

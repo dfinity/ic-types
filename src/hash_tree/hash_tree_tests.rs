@@ -20,7 +20,7 @@ fn works_with_simple_tree() {
     );
 
     assert_eq!(
-        hex::encode(tree.digest().to_vec()),
+        hex::encode(tree.digest()),
         "69cf325d0f20505b261821a7e77ff72fb9a8753a7964f0b587553bfb44e72532"
     );
 }
@@ -50,7 +50,7 @@ fn spec_example() {
     );
 
     assert_eq!(
-        hex::encode(tree.digest().to_vec()),
+        hex::encode(tree.digest()),
         "eb5c5b2195e62d996b84c9bcc8259d19a83786a2f59e0878cec84c811f669aa0"
     );
 }
@@ -84,7 +84,7 @@ fn spec_example_pruned() {
     );
 
     assert_eq!(
-        hex::encode(tree.digest().to_vec()),
+        hex::encode(tree.digest()),
         "eb5c5b2195e62d996b84c9bcc8259d19a83786a2f59e0878cec84c811f669aa0"
     );
 
@@ -114,34 +114,16 @@ fn can_lookup_paths_1() {
         ),
     );
 
-    assert_eq!(
-        tree.lookup_path(&["label 0".into()]),
-        LookupResult::Absent
-    );
-    assert_eq!(
-        tree.lookup_path(&["label 1".into()]),
-        LookupResult::Absent
-    );
-    assert_eq!(
-        tree.lookup_path(&["label 2".into()]),
-        LookupResult::Unknown
-    );
+    assert_eq!(tree.lookup_path(&["label 0".into()]), LookupResult::Absent);
+    assert_eq!(tree.lookup_path(&["label 1".into()]), LookupResult::Absent);
+    assert_eq!(tree.lookup_path(&["label 2".into()]), LookupResult::Unknown);
     assert_eq!(
         tree.lookup_path(&["label 3".into()]),
         LookupResult::Found(&[1, 2, 3, 4, 5, 6])
     );
-    assert_eq!(
-        tree.lookup_path(&["label 4".into()]),
-        LookupResult::Absent
-    );
-    assert_eq!(
-        tree.lookup_path(&["label 5".into()]),
-        LookupResult::Absent
-    );
-    assert_eq!(
-        tree.lookup_path(&["label 6".into()]),
-        LookupResult::Absent
-    );
+    assert_eq!(tree.lookup_path(&["label 4".into()]), LookupResult::Absent);
+    assert_eq!(tree.lookup_path(&["label 5".into()]), LookupResult::Absent);
+    assert_eq!(tree.lookup_path(&["label 6".into()]), LookupResult::Absent);
 }
 
 #[test]
@@ -157,34 +139,16 @@ fn can_lookup_paths_2() {
         ),
     );
 
-    assert_eq!(
-        tree.lookup_path(&["label 0".into()]),
-        LookupResult::Absent
-    );
-    assert_eq!(
-        tree.lookup_path(&["label 1".into()]),
-        LookupResult::Absent
-    );
-    assert_eq!(
-        tree.lookup_path(&["label 2".into()]),
-        LookupResult::Absent
-    );
+    assert_eq!(tree.lookup_path(&["label 0".into()]), LookupResult::Absent);
+    assert_eq!(tree.lookup_path(&["label 1".into()]), LookupResult::Absent);
+    assert_eq!(tree.lookup_path(&["label 2".into()]), LookupResult::Absent);
     assert_eq!(
         tree.lookup_path(&["label 3".into()]),
         LookupResult::Found(&[1, 2, 3, 4, 5, 6])
     );
-    assert_eq!(
-        tree.lookup_path(&["label 4".into()]),
-        LookupResult::Absent
-    );
-    assert_eq!(
-        tree.lookup_path(&["label 5".into()]),
-        LookupResult::Absent
-    );
-    assert_eq!(
-        tree.lookup_path(&["label 6".into()]),
-        LookupResult::Unknown
-    );
+    assert_eq!(tree.lookup_path(&["label 4".into()]), LookupResult::Absent);
+    assert_eq!(tree.lookup_path(&["label 5".into()]), LookupResult::Absent);
+    assert_eq!(tree.lookup_path(&["label 6".into()]), LookupResult::Unknown);
 }
 
 #[test]
@@ -200,26 +164,14 @@ fn can_lookup_paths_3() {
         ),
     );
 
-    assert_eq!(
-        tree.lookup_path(&["label 2".into()]),
-        LookupResult::Unknown
-    );
+    assert_eq!(tree.lookup_path(&["label 2".into()]), LookupResult::Unknown);
     assert_eq!(
         tree.lookup_path(&["label 3".into()]),
         LookupResult::Found(&[1, 2, 3, 4, 5, 6])
     );
-    assert_eq!(
-        tree.lookup_path(&["label 4".into()]),
-        LookupResult::Absent
-    );
-    assert_eq!(
-        tree.lookup_path(&["label 5".into()]),
-        LookupResult::Absent
-    );
-    assert_eq!(
-        tree.lookup_path(&["label 6".into()]),
-        LookupResult::Absent
-    );
+    assert_eq!(tree.lookup_path(&["label 4".into()]), LookupResult::Absent);
+    assert_eq!(tree.lookup_path(&["label 5".into()]), LookupResult::Absent);
+    assert_eq!(tree.lookup_path(&["label 6".into()]), LookupResult::Absent);
 }
 
 #[test]
@@ -235,26 +187,14 @@ fn can_lookup_paths_4() {
         ),
     );
 
-    assert_eq!(
-        tree.lookup_path(&["label 2".into()]),
-        LookupResult::Unknown
-    );
+    assert_eq!(tree.lookup_path(&["label 2".into()]), LookupResult::Unknown);
     assert_eq!(
         tree.lookup_path(&["label 3".into()]),
         LookupResult::Found(&[1, 2, 3, 4, 5, 6])
     );
-    assert_eq!(
-        tree.lookup_path(&["label 4".into()]),
-        LookupResult::Absent
-    );
-    assert_eq!(
-        tree.lookup_path(&["label 5".into()]),
-        LookupResult::Absent
-    );
-    assert_eq!(
-        tree.lookup_path(&["label 6".into()]),
-        LookupResult::Unknown
-    );
+    assert_eq!(tree.lookup_path(&["label 4".into()]), LookupResult::Absent);
+    assert_eq!(tree.lookup_path(&["label 5".into()]), LookupResult::Absent);
+    assert_eq!(tree.lookup_path(&["label 6".into()]), LookupResult::Unknown);
 }
 
 #[test]
@@ -270,34 +210,16 @@ fn can_lookup_paths_5() {
         label("label 7", empty()),
     );
 
-    assert_eq!(
-        tree.lookup_path(&["label 2".into()]),
-        LookupResult::Unknown
-    );
+    assert_eq!(tree.lookup_path(&["label 2".into()]), LookupResult::Unknown);
     assert_eq!(
         tree.lookup_path(&["label 3".into()]),
         LookupResult::Found(&[1, 2, 3, 4, 5, 6])
     );
-    assert_eq!(
-        tree.lookup_path(&["label 4".into()]),
-        LookupResult::Absent
-    );
-    assert_eq!(
-        tree.lookup_path(&["label 5".into()]),
-        LookupResult::Absent
-    );
-    assert_eq!(
-        tree.lookup_path(&["label 6".into()]),
-        LookupResult::Absent
-    );
-    assert_eq!(
-        tree.lookup_path(&["label 7".into()]),
-        LookupResult::Absent
-    );
-    assert_eq!(
-        tree.lookup_path(&["label 8".into()]),
-        LookupResult::Absent
-    );
+    assert_eq!(tree.lookup_path(&["label 4".into()]), LookupResult::Absent);
+    assert_eq!(tree.lookup_path(&["label 5".into()]), LookupResult::Absent);
+    assert_eq!(tree.lookup_path(&["label 6".into()]), LookupResult::Absent);
+    assert_eq!(tree.lookup_path(&["label 7".into()]), LookupResult::Absent);
+    assert_eq!(tree.lookup_path(&["label 8".into()]), LookupResult::Absent);
 }
 
 #[test]
@@ -313,34 +235,16 @@ fn can_lookup_paths_6() {
         label("label 7", empty()),
     );
 
-    assert_eq!(
-        tree.lookup_path(&["label 2".into()]),
-        LookupResult::Absent
-    );
+    assert_eq!(tree.lookup_path(&["label 2".into()]), LookupResult::Absent);
     assert_eq!(
         tree.lookup_path(&["label 3".into()]),
         LookupResult::Found(&[1, 2, 3, 4, 5, 6])
     );
-    assert_eq!(
-        tree.lookup_path(&["label 4".into()]),
-        LookupResult::Absent
-    );
-    assert_eq!(
-        tree.lookup_path(&["label 5".into()]),
-        LookupResult::Absent
-    );
-    assert_eq!(
-        tree.lookup_path(&["label 6".into()]),
-        LookupResult::Unknown
-    );
-    assert_eq!(
-        tree.lookup_path(&["label 7".into()]),
-        LookupResult::Absent
-    );
-    assert_eq!(
-        tree.lookup_path(&["label 8".into()]),
-        LookupResult::Absent
-    );
+    assert_eq!(tree.lookup_path(&["label 4".into()]), LookupResult::Absent);
+    assert_eq!(tree.lookup_path(&["label 5".into()]), LookupResult::Absent);
+    assert_eq!(tree.lookup_path(&["label 6".into()]), LookupResult::Unknown);
+    assert_eq!(tree.lookup_path(&["label 7".into()]), LookupResult::Absent);
+    assert_eq!(tree.lookup_path(&["label 8".into()]), LookupResult::Absent);
 }
 
 #[test]
@@ -356,26 +260,14 @@ fn can_lookup_paths_7() {
         pruned([0; 32]),
     );
 
-    assert_eq!(
-        tree.lookup_path(&["label 2".into()]),
-        LookupResult::Unknown
-    );
+    assert_eq!(tree.lookup_path(&["label 2".into()]), LookupResult::Unknown);
     assert_eq!(
         tree.lookup_path(&["label 3".into()]),
         LookupResult::Found(&[1, 2, 3, 4, 5, 6])
     );
-    assert_eq!(
-        tree.lookup_path(&["label 4".into()]),
-        LookupResult::Absent
-    );
-    assert_eq!(
-        tree.lookup_path(&["label 5".into()]),
-        LookupResult::Absent
-    );
-    assert_eq!(
-        tree.lookup_path(&["label 6".into()]),
-        LookupResult::Unknown
-    );
+    assert_eq!(tree.lookup_path(&["label 4".into()]), LookupResult::Absent);
+    assert_eq!(tree.lookup_path(&["label 5".into()]), LookupResult::Absent);
+    assert_eq!(tree.lookup_path(&["label 6".into()]), LookupResult::Unknown);
 }
 
 #[test]
@@ -391,24 +283,12 @@ fn can_lookup_paths_8() {
         pruned([0; 32]),
     );
 
-    assert_eq!(
-        tree.lookup_path(&["label 2".into()]),
-        LookupResult::Absent
-    );
+    assert_eq!(tree.lookup_path(&["label 2".into()]), LookupResult::Absent);
     assert_eq!(
         tree.lookup_path(&["label 3".into()]),
         LookupResult::Found(&[1, 2, 3, 4, 5, 6])
     );
-    assert_eq!(
-        tree.lookup_path(&["label 4".into()]),
-        LookupResult::Absent
-    );
-    assert_eq!(
-        tree.lookup_path(&["label 5".into()]),
-        LookupResult::Absent
-    );
-    assert_eq!(
-        tree.lookup_path(&["label 6".into()]),
-        LookupResult::Unknown
-    );
+    assert_eq!(tree.lookup_path(&["label 4".into()]), LookupResult::Absent);
+    assert_eq!(tree.lookup_path(&["label 5".into()]), LookupResult::Absent);
+    assert_eq!(tree.lookup_path(&["label 6".into()]), LookupResult::Unknown);
 }
