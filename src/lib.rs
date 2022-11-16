@@ -9,3 +9,17 @@ pub type Sha256Digest = [u8; 32];
 pub mod hash_tree;
 #[doc(inline)]
 pub use hash_tree::HashTree;
+
+/// Certificate types
+pub mod certificate;
+#[doc(inline)]
+pub use certificate::Certificate;
+#[doc(inline)]
+pub use certificate::CertificateDelegation;
+
+/// Blob types
+pub mod blob;
+#[doc(inline)]
+pub use blob::Blob;
+
+mod utils;
