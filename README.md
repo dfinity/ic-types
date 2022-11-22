@@ -1,3 +1,10 @@
+# DEPRECATED
+
+This is no longer supported. Its original contents has been moved to other projects.
+
+* `Principal`: [`candid`](https://github.com/dfinity/candid/blob/28a9fe8e898dc7662de2a13204b6f06bce536e14/rust/candid/src/types/principal.rs).
+* `HashTree`: [`agent-rs`](https://github.com/dfinity/agent-rs/tree/c9f9497dc8ced64b76250d76967f4f61a56d8262/ic-certification).
+
 # IC Types
 
 ## Contributing
