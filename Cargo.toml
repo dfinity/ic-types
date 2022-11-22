@@ -1,6 +1,6 @@
 [package]
 name = "ic-types"
-version = "0.6.0"
+version = "0.7.0"
 authors = ["DFINITY Stiftung <sdk@dfinity.org>"]
 edition = "2018"
 description = "Types related to the Internet Computer Public Specification."
@@ -12,24 +12,3 @@ readme = "README.md"
 categories = ["api-bindings", "data-structures", "no-std"]
 keywords = ["internet-computer", "types", "dfinity"]
 include = ["src", "Cargo.toml", "LICENSE", "README.md"]
-
-[dependencies]
-hex = "0.4.3"
-sha2 = "0.10.1"
-
-[dev-dependencies]
-serde = { version = "1.0.133", features = ["derive"] }
-serde_cbor = "0.11.2"
-
-[dependencies.serde]
-version = "1.0.115"
-features = ["derive"]
-optional = true
-
-[dependencies.serde_bytes]
-version = "0.11.5"
-optional = true
-
-[features]
-# Default features include serde support.
-default = ['serde', 'serde_bytes']
